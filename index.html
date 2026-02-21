@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -5,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RuangKata</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%233B6FD4'/><text x='50' y='72' font-family='Georgia,serif' font-size='68' font-weight='700' text-anchor='middle' fill='white'>R</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%233B6FD4'/><text x='50' y='68' font-family='Georgia,serif' font-size='46' font-weight='700' text-anchor='middle' fill='white'>RK</text></svg>">
 <style>
 *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 
@@ -64,12 +67,6 @@ header {
 .ftoggle.on .tdot { background:var(--blue); }
 .ftoggle.on .tdot::after { left:15px; background:#fff; }
 
-.autosave { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-sft); padding:6px 10px; background:var(--sur2); border-radius:8px; transition:var(--tr); }
-.autosave.saving { color:var(--gold); }
-.autosave.saved  { color:var(--green); }
-.adot { width:6px; height:6px; border-radius:50%; background:var(--ink-sft); transition:var(--tr); }
-.autosave.saving .adot { background:var(--gold); animation:pulse 1s infinite; }
-.autosave.saved  .adot { background:var(--green); }
 
 /* LAYOUT */
 .wrap { display:grid; grid-template-columns:1fr 300px; flex:1; height:calc(100vh - 113px); }
@@ -221,6 +218,19 @@ body.focus:hover header { opacity:1; pointer-events:auto; }
 .toast { position:fixed; bottom:24px; right:24px; background:var(--ink); color:#fff; padding:12px 18px; border-radius:10px; font-size:13px; font-weight:500; box-shadow:var(--sh2); transform:translateY(60px); opacity:0; transition:var(--tr); z-index:1000; }
 .toast.show { transform:translateY(0); opacity:1; }
 
+/* Mobile header fix */
+@media(max-width:600px){
+  header { padding:12px 16px; }
+  .logo-text { font-size:18px; }
+  .btn-ghost { padding:7px 10px; font-size:12px; }
+  .ftoggle { padding:6px 10px; font-size:12px; gap:6px; }
+  .ftoggle span { display:none; } /* sembunyikan teks "Focus Mode", tampilkan toggle saja */
+  .tdot { width:24px; height:14px; }
+  .tdot::after { width:8px; height:8px; top:3px; left:3px; }
+  .ftoggle.on .tdot::after { left:13px; }
+  .hdr-r { gap:6px; }
+}
+
 @media(max-width:900px){
   .wrap{grid-template-columns:1fr;height:auto}
   .sidebar{border-left:none;border-top:1px solid rgba(26,22,18,.07)}
@@ -237,12 +247,11 @@ body.focus:hover header { opacity:1; pointer-events:auto; }
 <body>
 
 <header>
-  <a href="index.html" class="logo">
+  <a href="#" class="logo">
     <div class="logo-mark"></div>
     <span class="logo-text">Ruang<span>Kata</span></span>
   </a>
   <div class="hdr-r">
-    <div class="autosave" id="av"><div class="adot"></div><span id="at">Auto-save aktif</span></div>
     <button class="btn btn-ghost" onclick="cleanText()">✦ Bersihkan</button>
     <button class="ftoggle" id="ft" onclick="toggleFocus()"><span>Focus Mode</span><div class="tdot"></div></button>
   </div>
@@ -376,13 +385,9 @@ ed.addEventListener('input', () => {
 
 /* ── AUTO-SAVE ── */
 function triggerSave() {
-  const av=document.getElementById('av'), at=document.getElementById('at');
-  av.className='autosave saving'; at.textContent='Menyimpan…';
   clearTimeout(saveT);
   saveT = setTimeout(()=>{
     localStorage.setItem('wf_text', getPlainText());
-    av.className='autosave saved'; at.textContent='Tersimpan otomatis';
-    setTimeout(()=>{ av.className='autosave'; at.textContent='Auto-save aktif'; }, 2000);
   }, 800);
 }
 
