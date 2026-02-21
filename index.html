@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RuangKata</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%233B6FD4'/><text x='50' y='72' font-family='Georgia,serif' font-size='68' font-weight='700' text-anchor='middle' fill='white'>R</text></svg>">
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+
+:root {
+  --bg:      #F5F2EE;
+  --sur:     #FEFCFA;
+  --sur2:    #F0ECE6;
+  --blue:    #3B6FD4;
+  --blue-lt: #EEF3FC;
+  --blue-md: #C5D7F7;
+  --ink:     #1A1612;
+  --ink-mid: #5C5650;
+  --ink-sft: #9B948C;
+  --gold:    #C9943A;
+  --green:   #3A9B6F;
+  --red:     #C94A3A;
+  --hl:      #A8E6B0;
+  --hl-cur:  #2E8B57;
+  --sh:  0 2px 20px rgba(26,22,18,.07),0 1px 4px rgba(26,22,18,.04);
+  --sh2: 0 8px 40px rgba(26,22,18,.10),0 2px 10px rgba(26,22,18,.06);
+  --r: 16px;
+  --tr: .2s cubic-bezier(.4,0,.2,1);
+}
+
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; display:flex; flex-direction:column; }
+
+/* HEADER */
+header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 32px; background:var(--sur);
+  border-bottom:1px solid rgba(26,22,18,.06);
+  position:sticky; top:0; z-index:100; backdrop-filter:blur(8px);
+  transition:opacity .3s;
+}
+.logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+.logo-mark { width:34px; height:34px; background:var(--blue); border-radius:10px; position:relative; overflow:hidden; }
+.logo-mark::before { content:''; position:absolute; width:18px; height:3px; background:#fff; border-radius:2px; top:9px; left:8px; }
+.logo-mark::after  { content:''; position:absolute; width:12px; height:3px; background:rgba(255,255,255,.5); border-radius:2px; top:16px; left:8px; box-shadow:0 6px 0 rgba(255,255,255,.3); }
+.logo-text { font-family:'Fraunces',serif; font-size:22px; font-weight:600; color:var(--ink); letter-spacing:-.5px; }
+.logo-text span { color:var(--blue); }
+.hdr-r { display:flex; align-items:center; gap:10px; }
+
+.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:10px; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:13.5px; font-weight:500; transition:var(--tr); }
+.btn-ghost { background:transparent; color:var(--ink-mid); }
+.btn-ghost:hover { background:var(--sur2); color:var(--ink); }
+.btn-primary { background:var(--blue); color:#fff; box-shadow:0 2px 8px rgba(59,111,212,.25); }
+.btn-primary:hover { background:#2d5ab8; transform:translateY(-1px); }
+.btn-outline { background:transparent; color:var(--blue); border:1.5px solid var(--blue-md); }
+.btn-outline:hover { background:var(--blue-lt); }
+
+.ftoggle { display:flex; align-items:center; gap:8px; padding:7px 14px; border-radius:10px; border:1.5px solid var(--sur2); background:transparent; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--ink-mid); font-weight:500; transition:var(--tr); }
+.ftoggle:hover { border-color:var(--blue-md); color:var(--blue); }
+.ftoggle.on { border-color:var(--blue); background:var(--blue-lt); color:var(--blue); }
+.tdot { width:28px; height:16px; background:var(--sur2); border-radius:8px; position:relative; transition:var(--tr); }
+.tdot::after { content:''; width:10px; height:10px; background:var(--ink-sft); border-radius:50%; position:absolute; top:3px; left:3px; transition:var(--tr); }
+.ftoggle.on .tdot { background:var(--blue); }
+.ftoggle.on .tdot::after { left:15px; background:#fff; }
+
+.autosave { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-sft); padding:6px 10px; background:var(--sur2); border-radius:8px; transition:var(--tr); }
+.autosave.saving { color:var(--gold); }
+.autosave.saved  { color:var(--green); }
+.adot { width:6px; height:6px; border-radius:50%; background:var(--ink-sft); transition:var(--tr); }
+.autosave.saving .adot { background:var(--gold); animation:pulse 1s infinite; }
+.autosave.saved  .adot { background:var(--green); }
+
+/* LAYOUT */
+.wrap { display:grid; grid-template-columns:1fr 300px; flex:1; height:calc(100vh - 113px); }
+.wrap.focus { grid-template-columns:1fr 0; }
+.wrap.focus .sidebar { display:none; }
+
+/* EDITOR SECTION */
+.esec { display:flex; flex-direction:column; padding:28px 32px; gap:20px; overflow-y:auto; }
+.emeta { animation:fadeUp .4s ease both; }
+.elabel { font-family:'Fraunces',serif; font-size:13px; font-weight:300; font-style:italic; color:var(--ink-sft); }
+
+.ecard {
+  background:var(--sur); border-radius:var(--r); box-shadow:var(--sh2);
+  flex:1; animation:fadeUp .5s .05s ease both;
+  border:1px solid rgba(26,22,18,.05); min-height:380px;
+  display:flex; flex-direction:column;
+}
+
+/* contenteditable editor */
+#editor {
+  flex:1; min-height:360px;
+  padding:28px 32px;
+  font-family:'DM Sans',sans-serif; font-size:16.5px; line-height:1.75;
+  color:var(--ink); font-weight:300; letter-spacing:.1px;
+  outline:none;
+  white-space:pre-wrap; word-wrap:break-word; overflow-wrap:break-word;
+  overflow-y:auto;
+  border-radius:var(--r);
+}
+#editor:empty::before {
+  content:'Tulis atau tempel teks Anda di sini…';
+  color:var(--ink-sft); font-style:italic; font-family:'Fraunces',serif; font-weight:300;
+  pointer-events:none;
+}
+
+/* Mark highlight styles — langsung di dalam teks */
+#editor mark.hn {
+  background: var(--hl) !important;
+  color: inherit !important;
+  border-radius: 3px;
+  padding: 1px 0;
+}
+#editor mark.ha {
+  background: var(--hl-cur) !important;
+  color: #fff !important;
+  border-radius: 3px;
+  padding: 1px 0;
+}
+
+/* STATS */
+.stats { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; animation:fadeUp .5s .1s ease both; }
+.sc { background:var(--sur); border-radius:12px; padding:16px 18px; box-shadow:var(--sh); border:1px solid rgba(26,22,18,.05); transition:var(--tr); position:relative; overflow:hidden; }
+.sc::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--blue); transform:scaleX(0); transition:transform .3s ease; transform-origin:left; }
+.sc:hover { transform:translateY(-2px); box-shadow:var(--sh2); }
+.sc:hover::before { transform:scaleX(1); }
+.sc.gold::before { transform:scaleX(1); background:var(--gold); }
+.slbl { font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:.8px; color:var(--ink-sft); margin-bottom:6px; }
+.sval { font-family:'Fraunces',serif; font-size:26px; font-weight:600; color:var(--ink); letter-spacing:-1px; line-height:1; margin-bottom:2px; }
+.ssub { font-size:11px; color:var(--ink-sft); }
+.sval.anim { animation:countUp .15s ease both; }
+
+/* SIDEBAR */
+.sidebar { background:var(--sur); border-left:1px solid rgba(26,22,18,.07); padding:24px 20px; overflow-y:auto; display:flex; flex-direction:column; gap:20px; }
+.sb-sec { animation:fadeUp .5s ease both; }
+.sb-title { font-family:'Fraunces',serif; font-size:13px; font-weight:600; color:var(--ink); margin-bottom:14px; letter-spacing:-.2px; display:flex; align-items:center; gap:8px; }
+.sb-icon { width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:11px; background:var(--blue-lt); color:var(--blue); }
+.sb-div { height:1px; background:rgba(26,22,18,.07); margin:0 -4px; }
+
+/* Reading time */
+.rt-box { background:var(--blue-lt); border-radius:12px; padding:16px; border:1px solid var(--blue-md); }
+.rt-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:13px; }
+.rt-row:last-child { margin-bottom:0; }
+.rt-lbl { color:var(--ink-mid); }
+.rt-val { font-family:'Fraunces',serif; font-weight:600; color:var(--blue); font-size:15px; }
+
+/* PENCARIAN */
+.search-box { background:var(--sur2); border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:10px; }
+
+.si-wrap { display:flex; align-items:center; gap:8px; background:var(--sur); border-radius:9px; padding:9px 12px; border:1.5px solid transparent; transition:var(--tr); }
+.si-wrap:focus-within { border-color:var(--blue); box-shadow:0 0 0 3px rgba(59,111,212,.1); }
+.si-ico { font-size:13px; color:var(--ink-sft); flex-shrink:0; }
+#si { flex:1; border:none; outline:none; font-family:'DM Sans',sans-serif; font-size:13.5px; color:var(--ink); background:transparent; }
+#si::placeholder { color:var(--ink-sft); }
+.si-clr { width:18px; height:18px; border-radius:50%; background:var(--sur2); border:none; cursor:pointer; font-size:10px; color:var(--ink-sft); display:none; align-items:center; justify-content:center; transition:var(--tr); flex-shrink:0; }
+.si-clr.show { display:flex; }
+.si-clr:hover { background:var(--red); color:#fff; }
+
+.si-info { display:none; align-items:center; justify-content:space-between; }
+.si-info.show { display:flex; }
+.si-pill { background:var(--hl); color:#1a5c33; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; font-family:'Fraunces',serif; }
+.si-total { font-size:11.5px; color:var(--ink-sft); }
+.si-nav { display:flex; align-items:center; gap:4px; }
+.si-lbl { font-family:'Fraunces',serif; font-size:13px; font-weight:600; color:var(--ink); min-width:44px; text-align:center; letter-spacing:-.5px; }
+.nb { width:26px; height:26px; border-radius:7px; border:1.5px solid var(--sur2); background:transparent; cursor:pointer; font-size:15px; color:var(--ink-mid); display:flex; align-items:center; justify-content:center; transition:var(--tr); font-family:sans-serif; }
+.nb:hover:not(:disabled) { background:var(--blue-lt); border-color:var(--blue-md); color:var(--blue); }
+.nb:disabled { opacity:.28; cursor:default; }
+
+.si-nf { display:none; font-size:12px; color:var(--red); font-style:italic; text-align:center; font-family:'Fraunces',serif; }
+.si-nf.show { display:block; }
+
+.occ-list { display:none; flex-direction:column; gap:2px; max-height:200px; overflow-y:auto; }
+.occ-list.show { display:flex; }
+.occ-item { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:7px; cursor:pointer; border:1.5px solid transparent; transition:background .12s,border-color .12s; }
+.occ-item:hover { background:rgba(168,230,176,.35); border-color:rgba(168,230,176,.8); }
+.occ-item.cur  { background:rgba(46,139,87,.1); border-color:var(--hl-cur); }
+.occ-n { font-family:'Fraunces',serif; font-size:10.5px; font-weight:600; color:var(--ink-sft); min-width:18px; text-align:right; flex-shrink:0; }
+.occ-item.cur .occ-n { color:var(--green); }
+.occ-txt { flex:1; font-size:11.5px; color:var(--ink-mid); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.occ-txt b { font-weight:600; color:var(--ink); background:var(--hl); border-radius:2px; padding:0 2px; }
+.occ-item.cur .occ-txt b { background:var(--hl-cur); color:#fff; }
+.occ-arr { font-size:10px; color:var(--ink-sft); }
+.si-hint { font-size:11.5px; color:var(--ink-sft); text-align:center; line-height:1.5; }
+
+/* Keyword */
+.kw-list { display:flex; flex-direction:column; gap:7px; max-height:210px; overflow-y:auto; }
+.kw-item { display:flex; align-items:center; gap:10px; font-size:13px; cursor:pointer; border-radius:6px; padding:4px 6px; transition:var(--tr); }
+.kw-item:hover { background:var(--blue-lt); }
+.kw-word { flex:1; color:var(--ink); font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; transition:color var(--tr); }
+.kw-item:hover .kw-word { color:var(--blue); }
+.kw-bar { width:55px; height:5px; background:var(--sur2); border-radius:3px; overflow:hidden; }
+.kw-fill { height:100%; background:var(--blue); border-radius:3px; transition:width .4s ease; }
+.kw-n { font-size:11px; color:var(--ink-sft); min-width:24px; text-align:right; }
+.kw-empty { font-size:13px; color:var(--ink-sft); font-style:italic; font-family:'Fraunces',serif; text-align:center; padding:14px 0; }
+.kw-hint { font-size:10.5px; color:var(--ink-sft); margin-bottom:10px; }
+.kw-hint span { background:var(--blue-lt); color:var(--blue); padding:1px 6px; border-radius:4px; font-weight:500; }
+
+
+
+/* Footer */
+footer { background:var(--sur); border-top:1px solid rgba(26,22,18,.07); padding:14px 32px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+.ft-l { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-sft); }
+.ft-logo { font-family:'Fraunces',serif; font-weight:600; color:var(--ink); font-size:13px; }
+.ft-logo span { color:var(--blue); }
+.ft-r { display:flex; align-items:center; gap:12px; font-size:11.5px; color:var(--ink-sft); }
+.ft-tip { display:flex; align-items:center; gap:5px; background:var(--blue-lt); color:var(--blue); padding:4px 10px; border-radius:20px; font-size:11px; font-weight:500; }
+
+@keyframes fadeUp  { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+@keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:.3} }
+@keyframes countUp { from{transform:translateY(4px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+body.focus header { opacity:0; pointer-events:none; }
+body.focus:hover header { opacity:1; pointer-events:auto; }
+
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--sur2); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--ink-sft); }
+
+.toast { position:fixed; bottom:24px; right:24px; background:var(--ink); color:#fff; padding:12px 18px; border-radius:10px; font-size:13px; font-weight:500; box-shadow:var(--sh2); transform:translateY(60px); opacity:0; transition:var(--tr); z-index:1000; }
+.toast.show { transform:translateY(0); opacity:1; }
+
+@media(max-width:900px){
+  .wrap{grid-template-columns:1fr;height:auto}
+  .sidebar{border-left:none;border-top:1px solid rgba(26,22,18,.07)}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .esec{padding:20px}
+  header{padding:14px 20px}
+}
+@media(max-width:480px){
+  .stats{grid-template-columns:1fr 1fr}
+  .logo-text{font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="#" class="logo">
+    <div class="logo-mark"></div>
+    <span class="logo-text">Ruang<span>Kata</span></span>
+  </a>
+  <div class="hdr-r">
+    <div class="autosave" id="av"><div class="adot"></div><span id="at">Auto-save aktif</span></div>
+    <button class="btn btn-ghost" onclick="cleanText()">✦ Bersihkan</button>
+    <button class="ftoggle" id="ft" onclick="toggleFocus()"><span>Focus Mode</span><div class="tdot"></div></button>
+  </div>
+</header>
+
+<div class="wrap" id="wrap">
+
+  <!-- EDITOR -->
+  <div class="esec">
+    <div class="emeta">
+      <span class="elabel">Mulai menulis, analitik akan muncul secara real-time…</span>
+    </div>
+
+    <div class="ecard">
+      <div id="editor" contenteditable="true" spellcheck="true"></div>
+    </div>
+
+    <div class="stats">
+      <div class="sc"><div class="slbl">Kata</div><div class="sval" id="sw">0</div><div class="ssub">total kata</div></div>
+      <div class="sc"><div class="slbl">Karakter</div><div class="sval" id="sch">0</div><div class="ssub" id="scs">0 tanpa spasi</div></div>
+      <div class="sc"><div class="slbl">Kalimat</div><div class="sval" id="ss">0</div><div class="ssub">total kalimat</div></div>
+      <div class="sc"><div class="slbl">Paragraf</div><div class="sval" id="sp">0</div><div class="ssub">total paragraf</div></div>
+      <div class="sc gold"><div class="slbl">Rata-rata</div><div class="sval" id="sa">0</div><div class="ssub">kata/kalimat</div></div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="sb-sec">
+      <div class="sb-title"><span class="sb-icon">⏱</span>Estimasi Waktu Baca</div>
+      <div class="rt-box">
+        <div class="rt-row"><span class="rt-lbl">Membaca (200 kpm)</span><span class="rt-val" id="rtR">—</span></div>
+        <div class="rt-row"><span class="rt-lbl">Presentasi (130 kpm)</span><span class="rt-val" id="rtS">—</span></div>
+        <div class="rt-row"><span class="rt-lbl">Script Video (150 kpm)</span><span class="rt-val" id="rtV">—</span></div>
+      </div>
+    </div>
+
+    <div class="sb-div"></div>
+
+    <!-- PENCARIAN KATA -->
+    <div class="sb-sec">
+      <div class="sb-title"><span class="sb-icon">🔍</span>Pencarian Kata</div>
+      <div class="search-box">
+        <div class="si-wrap">
+          <span class="si-ico">🔍</span>
+          <input id="si" type="text" placeholder="Ketik kata yang dicari…" autocomplete="off" spellcheck="false">
+          <button class="si-clr" id="sclr" onclick="clearSearch()">✕</button>
+        </div>
+        <div class="si-hint" id="shint">Ketik kata di atas — semua kemunculannya akan disorot hijau di teks.</div>
+        <div class="si-nf" id="snf">Kata tidak ditemukan dalam teks.</div>
+        <div class="si-info" id="sinfo">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="si-pill" id="spill">0</span>
+            <span class="si-total">kemunculan</span>
+          </div>
+          <div class="si-nav">
+            <button class="nb" id="bp" onclick="nav(-1)">‹</button>
+            <span class="si-lbl" id="snlbl">—</span>
+            <button class="nb" id="bn" onclick="nav(1)">›</button>
+          </div>
+        </div>
+        <div class="occ-list" id="occl"></div>
+      </div>
+    </div>
+
+    <div class="sb-div"></div>
+
+    <!-- KEYWORD DENSITY -->
+    <div class="sb-sec">
+      <div class="sb-title"><span class="sb-icon">📊</span>Kepadatan Kata Kunci</div>
+      <div class="kw-hint">Klik kata untuk <span>langsung mencarinya</span></div>
+      <div class="kw-list" id="kwl"><div class="kw-empty">Belum ada kata untuk dianalisis</div></div>
+    </div>
+
+
+
+  </aside>
+</div>
+
+<footer>
+  <div class="ft-l">
+    <span class="ft-logo">Ruang<span>Kata</span></span>
+    <span>·</span><span>Penghitung kata & analitik teks real-time</span>
+    <span>·</span><span>Gratis, tanpa login, tanpa batas</span>
+  </div>
+  <div class="ft-r">
+    <span class="ft-tip">Data tersimpan di browser</span>
+    <span>© 2025 RuangKata</span>
+    <span>·</span>
+    <a href="privacy-policy.html" style="color:var(--ink-sft);text-decoration:none;transition:color .2s;" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--ink-sft)'">Kebijakan Privasi</a>
+    <span>|</span>
+    <a href="terms-of-service.html" style="color:var(--ink-sft);text-decoration:none;transition:color .2s;" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--ink-sft)'">Syarat & Ketentuan</a>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const ed   = document.getElementById('editor');
+const si   = document.getElementById('si');
+const sclr = document.getElementById('sclr');
+const shint= document.getElementById('shint');
+const snf  = document.getElementById('snf');
+const sinfo= document.getElementById('sinfo');
+const spill= document.getElementById('spill');
+const snlbl= document.getElementById('snlbl');
+const occl = document.getElementById('occl');
+const bp   = document.getElementById('bp');
+const bn   = document.getElementById('bn');
+
+let saveT=null, lastQ='', cur=0, occData=[];
+
+/* ── LOAD saved ── */
+const saved = localStorage.getItem('wf_text');
+if (saved) ed.innerText = saved;
+analyze();
+
+/* ── PASTE: strip formatting, plain text only ── */
+ed.addEventListener('paste', e => {
+  e.preventDefault();
+  const text = e.clipboardData.getData('text/plain');
+  document.execCommand('insertText', false, text);
+});
+
+/* ── INPUT ── */
+ed.addEventListener('input', () => {
+  if (lastQ) doSearch(lastQ, false); // re-highlight tanpa reset cursor
+  analyze();
+  triggerSave();
+});
+
+/* ── AUTO-SAVE ── */
+function triggerSave() {
+  const av=document.getElementById('av'), at=document.getElementById('at');
+  av.className='autosave saving'; at.textContent='Menyimpan…';
+  clearTimeout(saveT);
+  saveT = setTimeout(()=>{
+    localStorage.setItem('wf_text', getPlainText());
+    av.className='autosave saved'; at.textContent='Tersimpan otomatis';
+    setTimeout(()=>{ av.className='autosave'; at.textContent='Auto-save aktif'; }, 2000);
+  }, 800);
+}
+
+/* ── GET PLAIN TEXT (ignore mark tags) ── */
+function getPlainText() {
+  // Baca langsung dari DOM structure contenteditable
+  // agar paragraf (div/p/br) terbaca dengan benar
+  const clone = ed.cloneNode(true);
+  // Hapus semua <mark> dulu
+  clone.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent)));
+
+  // Konversi struktur DOM ke plain text dengan newline yang benar
+  function nodeToText(node) {
+    if (node.nodeType === Node.TEXT_NODE) return node.nodeValue;
+    if (node.nodeName === 'BR') return '\n';
+    const block = ['DIV','P','LI','BLOCKQUOTE','H1','H2','H3','H4','H5','H6'];
+    let txt = Array.from(node.childNodes).map(nodeToText).join('');
+    if (block.includes(node.nodeName) && txt && !txt.endsWith('\n')) txt += '\n';
+    return txt;
+  }
+
+  return nodeToText(clone).replace(/\n$/, ''); // trim trailing newline
+}
+
+/* ── ANALYTICS ── */
+function analyze() {
+  const text = getPlainText();
+  const ws = text.trim()==='' ? [] : text.trim().split(/\s+/).filter(w=>w.length>0);
+  const wc=ws.length, cc=text.length, ccs=text.replace(/\s/g,'').length;
+  const sent = text.trim()==='' ? 0 : (text.match(/[.!?…]+/g)||[]).length||(text.trim()?1:0);
+  const para = text.trim()==='' ? 0 : (text.split(/\n+/).filter(p=>p.trim().length>0).length);
+  const avg  = sent>0?(wc/sent).toFixed(1):0;
+  anim('sw',wc); anim('sch',cc); anim('ss',sent); anim('sp',para); anim('sa',avg);
+  document.getElementById('scs').textContent=`${ccs} tanpa spasi`;
+  updateRT(wc); updateKW(ws);
+}
+
+function anim(id,v){
+  const el=document.getElementById(id);
+  if(el.textContent!==String(v)){el.classList.remove('anim');void el.offsetWidth;el.classList.add('anim');el.textContent=v;}
+}
+function fmt(w,wpm){
+  if(!w)return'—';
+  const m=w/wpm; if(m<1)return'< 1 menit';
+  const mm=Math.floor(m),ss=Math.round((m-mm)*60);
+  return ss?`${mm} mnt ${ss} dtk`:`${mm} menit`;
+}
+function updateRT(wc){
+  document.getElementById('rtR').textContent=fmt(wc,200);
+  document.getElementById('rtS').textContent=fmt(wc,130);
+  document.getElementById('rtV').textContent=fmt(wc,150);
+}
+function updateKW(ws){
+  const kl=document.getElementById('kwl');
+  if(!ws.length){kl.innerHTML='<div class="kw-empty">Belum ada kata untuk dianalisis</div>';return;}
+  const stop=new Set(['yang','dan','di','ke','dari','untuk','ini','itu','dengan','atau','pada','juga','tidak','sudah','akan','ada','dalam','adalah','oleh','kami','kita','mereka','anda','saya','bisa','saat','jika','the','and','a','an','in','on','at','to','for','of','is','are','was','were','be','been','have','has','had','do','does','did','it','its','i','we','you','they','he','she','that','this','with','as','by','or','not','but','so','if','then','from']);
+  const freq={};
+  ws.forEach(w=>{const c=w.toLowerCase().replace(/[^a-zA-Z0-9À-ÿ]/g,'');if(c.length>2&&!stop.has(c))freq[c]=(freq[c]||0)+1;});
+  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(!sorted.length){kl.innerHTML='<div class="kw-empty">Belum ada kata bermakna</div>';return;}
+  const mx=sorted[0][1];
+  kl.innerHTML=sorted.map(([w,n])=>`
+    <div class="kw-item" onclick="searchWord('${w}')">
+      <span class="kw-word">${w}</span>
+      <div class="kw-bar"><div class="kw-fill" style="width:${(n/mx*100).toFixed(0)}%"></div></div>
+      <span class="kw-n">${n}×</span>
+    </div>`).join('');
+}
+
+/* ── SEARCH — pakai TreeWalker untuk highlight langsung di DOM ── */
+si.addEventListener('input', ()=>{
+  const q=si.value.trim();
+  sclr.classList.toggle('show', si.value.length>0);
+  q ? doSearch(q, true) : clearSearch();
+});
+si.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){e.preventDefault(); e.shiftKey?nav(-1):nav(1);}
+  if(e.key==='Escape') clearSearch();
+});
+
+function searchWord(w){ si.value=w; sclr.classList.add('show'); doSearch(w,true); si.focus(); }
+
+function doSearch(q, resetCur=true) {
+  lastQ = q;
+  if(resetCur) cur = 0;
+
+  // Ambil plain text DULU sebelum inject mark
+  removeMarks();
+  const plain = getPlainText();
+
+  // Cari semua posisi kemunculan di plain text
+  const re = new RegExp(esc(q), 'gi');
+  const positions = []; let m;
+  while((m=re.exec(plain))!==null) positions.push({s:m.index, e:m.index+m[0].length, t:m[0]});
+
+  const total = positions.length;
+  shint.style.display='none';
+
+  if(!total){
+    snf.classList.add('show');
+    sinfo.classList.remove('show');
+    occl.classList.remove('show');
+    bp.disabled=bn.disabled=true;
+    occData=[];
+    return;
+  }
+
+  snf.classList.remove('show');
+  if(cur>=total) cur=0;
+  bp.disabled=bn.disabled=false;
+  spill.textContent=total;
+  sinfo.classList.add('show');
+  occl.classList.add('show');
+
+  // Inject mark ke DOM
+  const marks = injectMarks(q);
+  occData = marks;
+
+  updateActive();
+  renderOcc(plain, positions);
+}
+
+function clearSearch(){
+  lastQ=''; cur=0; occData=[];
+  si.value=''; sclr.classList.remove('show');
+  shint.style.display=''; snf.classList.remove('show');
+  sinfo.classList.remove('show'); occl.classList.remove('show');
+  removeMarks();
+}
+
+function nav(d){
+  if(!occData.length)return;
+  cur=(cur+d+occData.length)%occData.length;
+  updateActive();
+  // Re-render occ list dengan plain text saat ini
+  const plain = getPlainText();
+  const re = new RegExp(esc(lastQ),'gi');
+  const positions=[]; let m;
+  while((m=re.exec(plain))!==null) positions.push({s:m.index,e:m.index+m[0].length,t:m[0]});
+  renderOcc(plain, positions);
+}
+
+function updateActive(){
+  occData.forEach((m,i)=>{
+    m.className = i===cur ? 'ha' : 'hn';
+  });
+  snlbl.textContent=occData.length?`${cur+1}/${occData.length}`:'—';
+  // Update active item di list
+  document.querySelectorAll('.occ-item').forEach((el,i)=>{
+    el.classList.toggle('cur', i===cur);
+  });
+  const active=document.querySelector('.occ-item.cur');
+  if(active) active.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+
+function goTo(i){
+  cur=i; updateActive();
+  document.querySelectorAll('.occ-item').forEach((el,j)=>el.classList.toggle('cur',j===i));
+}
+
+/* Inject <mark> langsung ke text nodes di #editor — urutan benar (maju) */
+function injectMarks(q) {
+  const allMarks = [];
+  const re = new RegExp(esc(q), 'gi');
+  const walker = document.createTreeWalker(ed, NodeFilter.SHOW_TEXT, null);
+  const textNodes = [];
+  let node;
+  while ((node = walker.nextNode())) textNodes.push(node);
+
+  // Proses dari belakang supaya index tidak bergeser saat replace
+  // tapi simpan mark dengan urutan maju (push, bukan unshift)
+  const nodeMarks = [];
+  textNodes.slice().reverse().forEach(tn => {
+    const txt = tn.nodeValue;
+    const found = [];
+    re.lastIndex = 0;
+    let m;
+    while((m=re.exec(txt))!==null) found.push({s:m.index, e:m.index+m[0].length, t:m[0]});
+    if(!found.length) return;
+
+    const frag = document.createDocumentFragment();
+    let lastIdx = 0;
+    const localMarks = [];
+    found.forEach(({s,e,t}) => {
+      if(s>lastIdx) frag.appendChild(document.createTextNode(txt.slice(lastIdx,s)));
+      const mk = document.createElement('mark');
+      mk.className='hn'; mk.textContent=t;
+      frag.appendChild(mk);
+      localMarks.push(mk);
+      lastIdx=e;
+    });
+    if(lastIdx<txt.length) frag.appendChild(document.createTextNode(txt.slice(lastIdx)));
+    tn.parentNode.replaceChild(frag, tn);
+    nodeMarks.unshift(localMarks); // node dibalik, jadi unshift grup
+  });
+
+  // Flatten dengan urutan yang benar
+  nodeMarks.forEach(group => group.forEach(mk => allMarks.push(mk)));
+  return allMarks;
+}
+
+/* Hapus semua <mark> — restore text nodes */
+function removeMarks() {
+  ed.querySelectorAll('mark').forEach(mk => {
+    const txt = document.createTextNode(mk.textContent);
+    mk.parentNode.replaceChild(txt, mk);
+  });
+  // Normalize untuk gabungkan text nodes yang berdekatan
+  ed.normalize();
+}
+
+/* Render daftar occurrence */
+function renderOcc(plain, positions){
+  occl.innerHTML=positions.map(({s,e,t},i)=>{
+    const cs=Math.max(0,s-28), ce=Math.min(plain.length,e+28);
+    const bef=ehs(plain.slice(cs,s)), wd=ehs(t), aft=ehs(plain.slice(e,ce));
+    const pre=cs>0?'…':'', suf=ce<plain.length?'…':'';
+    return `<div class="occ-item${i===cur?' cur':''}" onclick="goTo(${i})">
+      <span class="occ-n">${i+1}</span>
+      <span class="occ-txt">${pre}${bef}<b>${wd}</b>${aft}${suf}</span>
+      <span class="occ-arr">→</span>
+    </div>`;
+  }).join('');
+  const active=occl.querySelector('.occ-item.cur');
+  if(active) active.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+
+function esc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+function ehs(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ── UTILS ── */
+function cleanText(){
+  if(!ed.innerText.trim())return;
+  if(confirm('Yakin ingin menghapus semua teks?')){
+    ed.innerHTML=''; clearSearch(); analyze();
+    localStorage.removeItem('wf_text'); toast('Teks berhasil dibersihkan ✓');
+  }
+}
+
+let focusOn=false;
+function toggleFocus(){
+  focusOn=!focusOn;
+  document.body.classList.toggle('focus',focusOn);
+  document.getElementById('wrap').classList.toggle('focus',focusOn);
+  document.getElementById('ft').classList.toggle('on',focusOn);
+  toast(focusOn?'Focus Mode aktif — hover header untuk menu':'Focus Mode dinonaktifkan');
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
